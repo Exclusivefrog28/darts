@@ -1,0 +1,3 @@
+/media/excf28/SSD/dev/darts/cmake-build-debug/CMakeFiles/darts.dir
+/media/excf28/SSD/dev/darts/cmake-build-debug/CMakeFiles/edit_cache.dir
+/media/excf28/SSD/dev/darts/cmake-build-debug/CMakeFiles/rebuild_cache.dir
