@@ -26,8 +26,8 @@ int player1Hits[7] = {0}, player2Hits[7] = {0};
 int areaStates[7] = {BASE};
 
 void delay() {
-//    int delay = rand() % 3 + 1;
-    sleep(1);
+    int delay = rand() % 2 + 1;
+    sleep(delay);
 }
 
 struct Throw {
