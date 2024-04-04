@@ -52,12 +52,14 @@ struct Throw throwDart() {
 }
 
 void player(int playerID) {
+    // TODO: pause for signal here
     char name[20];
     sprintf(name, "Player %d", playerID);
     printf("%s has joined the game.\n", name);
     srand(time(NULL) * playerID);
 
     while (1) {
+        // TODO: pause for signal here
         sem_wait(startSem);
         delay();
         struct Throw throw = throwDart();
@@ -105,6 +107,7 @@ int main() {
 
         struct Throw throw1, throw2;
 
+        // TODO: fix this cursed semaphore
         sem_post(player1Sem);
         read(pipefd[0], &throw1, sizeof(struct Throw));
         sem_wait(player1Sem);
@@ -124,6 +127,7 @@ int main() {
             }
         }
 
+        // TODO: fix this cursed semaphore
         sem_post(player2Sem);
         read(pipefd[0], &throw2, sizeof(struct Throw));
         sem_wait(player2Sem);
