@@ -9,7 +9,6 @@
 #include <stdbool.h>
 
 #define MAX_ROUNDS 20
-#define MAX_SCORE 501
 
 #define BASE 0
 #define OPEN_PLAYERONE 1
@@ -103,7 +102,7 @@ int main() {
     sleep(1);
 
     int round = 1;
-    while (round <= MAX_ROUNDS && player1Score < MAX_SCORE && player2Score < MAX_SCORE) {
+    while (round <= MAX_ROUNDS) {
         printf("\nRound %d\n", round);
         struct Throw throw1, throw2;
 
@@ -181,9 +180,12 @@ int main() {
         printf("It's a draw!\n");
     }
 
-    sem_unlink("/startSem");
-    sem_unlink("/player1Sem");
-    sem_unlink("/player2Sem");
+    sem_unlink("/startSem0");
+    sem_unlink("/startSem1");
+    sem_unlink("/sendSem0");
+    sem_unlink("/sendSem1");
+    sem_unlink("/sentSem0");
+    sem_unlink("/sentSem1");
 
     return 0;
 }
