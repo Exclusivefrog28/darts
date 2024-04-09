@@ -15,7 +15,7 @@
 #define OPEN_PLAYERTWO 2
 #define CLOSED (-1)
 
-sem_t *startSem[2], *sendSem[2], *sentSem[2];
+sem_t *startSem[2], *finishSem[2], *sendSem[2], *sentSem[2];
 int pipefd[2];
 int player1Score = 0, player2Score = 0;
 int player1Hits[7] = {0}, player2Hits[7] = {0};
@@ -48,9 +48,7 @@ struct Throw throwDart() {
     return throw;
 }
 
-void signalHandler(int signal) {
-    printf("Signal %d received.\n", signal);
-}
+void signalHandler(int signal) {}
 
 void player(int playerID) {
     char name[20];
@@ -63,6 +61,7 @@ void player(int playerID) {
         delay();
         struct Throw throw = throwDart();
         printf("%s has thrown %d * %d.\n", name, throw.area + 15, throw.multiplier);
+        sem_post(finishSem[playerID]);
 
         sem_wait(sendSem[playerID]);
         write(pipefd[1], &throw, sizeof(struct Throw));
@@ -73,6 +72,8 @@ void player(int playerID) {
 int main() {
     startSem[0] = sem_open("/startSem0", O_CREAT, S_IRUSR | S_IWUSR, 0);
     startSem[1] = sem_open("/startSem1", O_CREAT, S_IRUSR | S_IWUSR, 0);
+    finishSem[0] = sem_open("/finishSem0", O_CREAT, S_IRUSR | S_IWUSR, 0);
+    finishSem[1] = sem_open("/finishSem1", O_CREAT, S_IRUSR | S_IWUSR, 0);
     sendSem[0] = sem_open("/sendSem0", O_CREAT, S_IRUSR | S_IWUSR, 0);
     sendSem[1] = sem_open("/sendSem1", O_CREAT, S_IRUSR | S_IWUSR, 0);
     sentSem[0] = sem_open("/sentSem0", O_CREAT, S_IRUSR | S_IWUSR, 0);
@@ -96,6 +97,8 @@ int main() {
         return 0;
     }
 
+    delay();
+
     kill(player1PID, SIGUSR1);
     sleep(1);
     kill(player2PID, SIGUSR1);
@@ -109,6 +112,7 @@ int main() {
         sem_post(startSem[0]);
         sem_post(startSem[1]);
 
+        sem_wait(finishSem[0]);
         sem_post(sendSem[0]);
         sem_wait(sentSem[0]);
         read(pipefd[0], &throw1, sizeof(struct Throw));
@@ -128,21 +132,22 @@ int main() {
             }
         }
 
+        sem_wait(finishSem[1]);
         sem_post(sendSem[1]);
         sem_wait(sentSem[1]);
         read(pipefd[0], &throw2, sizeof(struct Throw));
 
         if (throw2.area > 0 && areaStates[throw2.area] != CLOSED) {
             player2Hits[throw2.area] += throw2.multiplier;
-            if (areaStates[throw2.area] == OPEN_PLAYERTWO) player1Score += throw2.score;
+            if (areaStates[throw2.area] == OPEN_PLAYERTWO) player2Score += throw2.score;
             else if (player2Hits[throw2.area] >= 3) {
                 if (areaStates[throw2.area] == BASE) {
                     areaStates[throw2.area] = OPEN_PLAYERTWO;
-                    printf("Player 2 opened area %d\n", throw1.area + 15);
+                    printf("Player 2 opened area %d\n", throw2.area + 15);
                 }
                 if (areaStates[throw2.area] == OPEN_PLAYERONE) {
                     areaStates[throw2.area] = CLOSED;
-                    printf("Player 2 closed area %d\n", throw1.area + 15);
+                    printf("Player 2 closed area %d\n", throw2.area + 15);
                 }
             }
         }
@@ -172,9 +177,9 @@ int main() {
     close(pipefd[0]);
     close(pipefd[1]);
 
-    if (player1Score >= player2Score) {
+    if (player1Score > player2Score) {
         printf("Player 1 wins!\n");
-    } else if (player2Score >= player1Score) {
+    } else if (player2Score > player1Score) {
         printf("Player 2 wins!\n");
     } else {
         printf("It's a draw!\n");
@@ -182,6 +187,8 @@ int main() {
 
     sem_unlink("/startSem0");
     sem_unlink("/startSem1");
+    sem_unlink("/finishSem0");
+    sem_unlink("/finishSem1");
     sem_unlink("/sendSem0");
     sem_unlink("/sendSem1");
     sem_unlink("/sentSem0");
