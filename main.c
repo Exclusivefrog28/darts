@@ -117,7 +117,7 @@ int main() {
         sem_wait(sentSem[0]);
         read(pipefd[0], &throw1, sizeof(struct Throw));
 
-        if (throw1.area > 0 && areaStates[throw1.area] != CLOSED) {
+        if (throw1.area >= 0 && areaStates[throw1.area] != CLOSED) {
             player1Hits[throw1.area] += throw1.multiplier;
             if (areaStates[throw1.area] == OPEN_PLAYERONE) player1Score += throw1.score;
             else if (player1Hits[throw1.area] >= 3) {
@@ -137,7 +137,7 @@ int main() {
         sem_wait(sentSem[1]);
         read(pipefd[0], &throw2, sizeof(struct Throw));
 
-        if (throw2.area > 0 && areaStates[throw2.area] != CLOSED) {
+        if (throw2.area >= 0 && areaStates[throw2.area] != CLOSED) {
             player2Hits[throw2.area] += throw2.multiplier;
             if (areaStates[throw2.area] == OPEN_PLAYERTWO) player2Score += throw2.score;
             else if (player2Hits[throw2.area] >= 3) {
